@@ -1,0 +1,39 @@
+# ignore compiled files of any sort
+*.pyc
+*.c
+*~
+.#*
+*.swp
+*.swo
+*.profile
+
+# ignore coverage report file
+.coverage
+coverage.xml
+
+# ignore specific usual dirs
+.ipynb_checkpoints/
+dist/
+docs/
+.DS_Store/
+.cache/
+__cache__/
+build/
+.pytest_cache/
+__pycache__/
+.cachedir/
+_build/
+auto_examples/
+_autosummary/
+generated/
+modules/
+
+# ignore example result files
+*.png
+*.pdf
+
+# ignore all type of archived/zipped files
+*.zip
+*.nt.bz2
+*.tar.gz
+*.tgz
