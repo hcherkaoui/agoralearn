@@ -1,12 +1,10 @@
-#%%
 """Prediction error display."""
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from agoralearn.forecasters import LearningForecaster
-from agoralearn.utils import simulate_hmm
-from agoralearn.transition_matrix import generate_transition_matrix
+from agoralearn.markov import simulate_hmm, generate_transition_matrix
 
 
 ###############################################################################
@@ -53,6 +51,8 @@ y_val = y[n_train+n_test:]
 ###############################################################################
 # Main
 if __name__ == '__main__':
+
+    print("[INFO] Running time-series forecasting...")
 
     forecaster = LearningForecaster(states=states, lbda=lbda)
 
@@ -125,6 +125,8 @@ if __name__ == '__main__':
     fig.tight_layout()
 
     fig.show()
-    fig.savefig(os.path.join(figures_dir, "time_series_forecasting_single.pdf"), dpi=300)
 
-# %%
+    filename = os.path.join(figures_dir, "time_series_forecasting_single.pdf")
+
+    print("[INFO] Saving figure to", filename)
+    fig.savefig(filename, dpi=300)

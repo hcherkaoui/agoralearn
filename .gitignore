@@ -12,6 +12,9 @@
 coverage.xml
 
 # ignore specific usual dirs
+figures/
+cifar/
+stl10/
 .ipynb_checkpoints/
 dist/
 docs/

@@ -1,5 +1,6 @@
 """Simple time serie illustration."""
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -30,11 +31,16 @@ def generate_markov_chain(n, P, states):
 
 
 ###############################################################################
-# Settings
+# Global settings
 figsize = (8, 4)
 fontsize = 14
 lw = 3.0
 
+figures_dir = 'figures'
+os.makedirs(figures_dir, exist_ok=True)
+
+###############################################################################
+# Settings
 d = 6
 assert d >= 6, f"Dimension d should be higher than 6, got {d}"
 n_states = 10
@@ -59,21 +65,26 @@ for i in range(n_states):
 
 ###############################################################################
 # Main
-print("[Main] Simple time serie example")
+print("[Info] Generating Markov chain and prices")
 X = generate_markov_chain(n_samples, P, states)
 prices = np.cumsum(X @ theta + np.random.randn(n_samples) * sigma)
 
 ###############################################################################
 # Plotting
-print("[Main] Plotting")
 plt.figure(figsize=(6, 3))
+fig, ax = plt.subplots(figsize=(6, 3))
 
-plt.plot(prices, lw=lw, alpha=0.8)
+ax.plot(prices, lw=lw, alpha=0.8)
 
-plt.xlabel("Time", fontsize=fontsize)
-plt.ylabel("Relative stock value", fontsize=fontsize)
-plt.legend(fontsize=int(0.5*fontsize))
-plt.grid(True)
-plt.tight_layout()
+ax.set_xlabel("Time", fontsize=fontsize)
+ax.set_ylabel("Relative stock value", fontsize=fontsize)
+ax.grid(True)
 
-plt.show()
+fig.tight_layout()
+
+fig.show()
+
+filename = os.path.join(figures_dir, "stock_value.pdf")
+
+print("[INFO] Saving figure to", filename)
+fig.savefig(filename, dpi=300)
