@@ -6,7 +6,6 @@ import os
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import numpy as np
-from sklearn.preprocessing import QuantileTransformer
 from agoralearn.datasets import fetch_datasets
 from agoralearn.estimation import estimate_ridge, estimate_sigma_squared_ridge
 from agoralearn.criterions import criterion_expect, criterion_inst, criterion_heuri
@@ -87,13 +86,7 @@ lbda = 0.0
 delta = 0.9  # to be adjusted
 beta = 0.1  # to be adjusted
 
-###############################################################################
-# Data
 X1, X2, y1, y2 = fetch_datasets(dataset_name='clip')
-
-# Ensure data is Gaussian-like
-X1 = QuantileTransformer(output_distribution='normal').fit_transform(X1)
-X2 = QuantileTransformer(output_distribution='normal').fit_transform(X2)
 
 ###############################################################################
 # Main

@@ -54,7 +54,7 @@ class OracleForecaster:
 
     def _concatenate_samples(self, l_X_y):
         """Concatenate in the samples."""
-        X_, y_= [self.X], [self.y]
+        X_, y_ = [self.X], [self.y]
 
         for X_i, y_i in l_X_y:
             X_i = np.atleast_2d(X_i)

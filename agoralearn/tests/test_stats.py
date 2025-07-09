@@ -21,11 +21,13 @@ def random_setup():
     M_large = np.random.rand(5, 5)
     return X, theta1, theta2, M, B, sigma, A1_inv, A2_inv, M_large
 
+
 def test_XXt(random_setup):
     X, *_ = random_setup
     expected = X @ X.T
     result = XXt(X)
     np.testing.assert_allclose(result, expected)
+
 
 def test_XtX(random_setup):
     X, *_ = random_setup
@@ -33,17 +35,20 @@ def test_XtX(random_setup):
     result = XtX(X)
     np.testing.assert_allclose(result, expected)
 
+
 def test_Id_like():
     A = np.random.randn(7, 3)
     result = Id_like(A)
     expected = np.eye(7)
     np.testing.assert_allclose(result, expected)
 
+
 def test_bias_square_norm(random_setup):
     _, theta1, theta2, M, *_ = random_setup
     expected = ((M.T @ (theta2 - theta1))**2).sum()
     result = bias_square_norm(M, theta2, theta1)
     assert np.isclose(result, expected)
+
 
 def test_bias_square_B_norm(random_setup):
     _, theta1, theta2, M, B, *_ = random_setup
@@ -52,11 +57,13 @@ def test_bias_square_B_norm(random_setup):
     result = bias_square_B_norm(M, B, theta2, theta1)
     assert np.isclose(result, expected)
 
+
 def test_B(random_setup):
     _, _, _, _, _, _, A1_inv, A2_inv, M = random_setup
     B = _B(A1_inv, A2_inv, M)
     assert B.shape == (5, 5)
     assert np.all(np.isfinite(B))
+
 
 def test_psi(random_setup):
     _, _, _, _, _, sigma, *_ = random_setup

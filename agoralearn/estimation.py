@@ -11,7 +11,7 @@ from .stats import bias_square_norm, bias_square_B_norm, Id_like
 def estimate_operator_norm(A: np.ndarray,
                            num_iter: int = 100,
                            tol: float = 1e-6,
-) -> float:
+                           ) -> float:
     """
     Estimate the operator (spectral) norm of matrix A using power iteration.
 
@@ -60,7 +60,7 @@ def estimate_operator_norm(A: np.ndarray,
 def estimate_ridge(X: np.ndarray,
                    y: np.ndarray,
                    lbda: float = -1.0,
-) -> np.ndarray:
+                   ) -> np.ndarray:
     """Estimate regression weights using OLS or Ridge regression.
 
     Parameters
@@ -85,7 +85,7 @@ def estimate_ridge(X: np.ndarray,
 @numba.jit(nopython=True, cache=True, fastmath=True)
 def estimate_james_stein_coef(theta_hat: np.ndarray,
                               sigma: float,
-) -> float:
+                              ) -> float:
     """Compute the James–Stein shrinkage coefficient.
 
     Parameters
@@ -115,7 +115,7 @@ def estimate_james_stein_coef(theta_hat: np.ndarray,
 def estimate_sigma_squared_ridge(X: np.ndarray,
                                  y: np.ndarray,
                                  lbda: float = -1.0,
-) -> float:
+                                 ) -> float:
     """
     Estimate the noise variance sigma^2 in a linear model y = X theta + eta,
     using Ridge (or OLS) regression and an unbiased estimator from the residuals.
@@ -137,14 +137,13 @@ def estimate_sigma_squared_ridge(X: np.ndarray,
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)
-def estimate_bias_square_norm(
-    theta1_hat: np.ndarray,
-    theta2_hat: np.ndarray,
-    M: np.ndarray,
-    A1_inv: np.ndarray,
-    A2_inv: np.ndarray,
-    sigma: float,
-) -> float:
+def estimate_bias_square_norm(theta1_hat: np.ndarray,
+                              theta2_hat: np.ndarray,
+                              M: np.ndarray,
+                              A1_inv: np.ndarray,
+                              A2_inv: np.ndarray,
+                              sigma: float,
+                              ) -> float:
     """
     Estimate || M (theta2^* - theta1^*) ||_2^2 using an unbiased estimator.
 
@@ -171,15 +170,14 @@ def estimate_bias_square_norm(
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)
-def estimate_bias_square_B_norm(
-    theta1_hat: np.ndarray,
-    theta2_hat: np.ndarray,
-    M: np.ndarray,
-    B: np.ndarray,
-    A1_inv: np.ndarray,
-    A2_inv: np.ndarray,
-    sigma: float,
-) -> float:
+def estimate_bias_square_B_norm(theta1_hat: np.ndarray,
+                                theta2_hat: np.ndarray,
+                                M: np.ndarray,
+                                B: np.ndarray,
+                                A1_inv: np.ndarray,
+                                A2_inv: np.ndarray,
+                                sigma: float,
+                                ) -> float:
     """
     Estimate || M (theta2^* - theta1^*) ||_B^2 using an unbiased estimator.
 

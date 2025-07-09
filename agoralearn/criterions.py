@@ -121,14 +121,13 @@ def criterion_inst(
     eig_B_max = np.max(np.linalg.eigvalsh(B))
 
     lower_bound_single = sigma**2 * (tr_A1_inv
-        - 2 * np.sqrt(np.log(1 / delta) * tr_A1_inv2)
-        - 2 * np.log(1 / delta) / eig_A1_min
-    )
+                                     - 2 * np.sqrt(np.log(1 / delta) * tr_A1_inv2)
+                                     - 2 * np.log(1 / delta) / eig_A1_min)
 
     cross_term = 2 * sigma * np.sqrt(np.log(1 / delta) * bias_B_norm_sq)
-    variance_term = sigma**2 * (
-        tr_B + 2 * np.sqrt(np.log(1 / delta) * tr_B2) + 2 * np.log(1 / delta) * eig_B_max
-    )
+    variance_term = sigma**2 * (tr_B
+                                + 2 * np.sqrt(np.log(1 / delta) * tr_B2)
+                                + 2 * np.log(1 / delta) * eig_B_max)
     upper_bound_collab = bias_norm_sq + cross_term + variance_term
 
     return float(upper_bound_collab - lower_bound_single)

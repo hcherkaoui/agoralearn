@@ -4,7 +4,7 @@
 
 import pytest
 import numpy as np
-from markov import generate_transition_matrix, generate_markov_chain, simulate_hmm
+from agoralearn.markov import generate_transition_matrix, generate_markov_chain, simulate_hmm
 
 
 @pytest.mark.parametrize("matrix_type", ["uniform", "sticky", "cyclic", "biased", "block"])
@@ -12,7 +12,7 @@ def test_transition_matrix_validity(matrix_type):
     d = 5
     bias = 2 if matrix_type == "biased" else None
     P = generate_transition_matrix(d, type=matrix_type, bias=bias)
-    
+
     assert P.shape == (d, d)
     np.testing.assert_allclose(P.sum(axis=1), np.ones(d), atol=1e-8)
     assert np.all((P >= 0) & (P <= 1))
@@ -45,7 +45,7 @@ def test_simulate_hmm_output_shape_and_noise():
 
     assert X.shape == (n, d)
     assert y.shape == (n,)
-    
+
     y_denoised = X @ theta_star
     residual = y - y_denoised
     assert np.std(residual) > 0.1

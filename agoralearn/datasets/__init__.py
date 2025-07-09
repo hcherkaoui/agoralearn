@@ -9,8 +9,6 @@ import torch
 from torchvision.datasets import CIFAR10, STL10
 from torchvision import transforms
 from transformers import CLIPProcessor, CLIPModel
-from tqdm import tqdm
-from ucimlrepo import fetch_ucirepo
 
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -36,14 +34,11 @@ def fetch_datasets(dataset_name: str):
         Target vector of shape (n_samples,)
     """
     if dataset_name == 'wine':
-        (X1, y1), (X2, y2) =_load_wine_dataset()
-
-    elif dataset_name == 'bike':
-        (X1, y1), (X2, y2) = _load_seoul_bike_agents_dataset()
+        (X1, y1), (X2, y2) = _load_wine_dataset()
 
     elif dataset_name == 'clip':
         (X1, y1), (X2, y2) = _load_clip_regression_dataset()
-    
+
     else:
         raise ValueError(f"Dataset '{dataset_name}' is not supported.")
 
@@ -65,32 +60,9 @@ def _load_wine_dataset():
         X = df.drop(columns=['quality']).values.astype(np.float64)
         y = df['quality'].values.astype(np.float64)
         return X, y
-    
+
     X1, y1 = _load_wine(os.path.join(data_dir, 'winequality', 'winequality-red.csv'))
     X2, y2 = _load_wine(os.path.join(data_dir, 'winequality', 'winequality-white.csv'))
-
-    return (X1, y1), (X2, y2)
-
-
-def _load_seoul_bike_agents_dataset():
-    """
-    Load the Seoul Bike Sharing Demand dataset,
-    splits into two agent datasets, and returns (X1,y1), (X2,y2).
-    """
-    dataset = fetch_ucirepo(id=560)
-    df = pd.concat([dataset.data.features, dataset.data.targets], axis=1)
-    df = df.rename(columns={"Rented Bike Count": "cnt"})
-
-    numeric_df = df.select_dtypes(include=[np.number])
-
-    features = [col for col in numeric_df.columns if col != 'cnt']
-    X = numeric_df[features].values.astype(np.float64)
-    y = numeric_df['cnt'].values.astype(np.float64)
-
-    mask1 = df['Hour'].isin([7, 8, 9, 17, 18, 19])
-
-    X1, y1 = X[mask1], y[mask1]
-    X2, y2 = X[~mask1], y[~mask1]
 
     return (X1, y1), (X2, y2)
 
@@ -120,7 +92,7 @@ def _load_clip_regression_dataset(n_samples=1000, device="cpu"):
 
     def _extract_features(imgs):
         features = []
-        for i in tqdm(range(0, len(imgs), 8)):
+        for i in range(0, len(imgs), 8):
             batch = imgs[i:i + 8]
             pil_batch = [transforms.ToPILImage()(img) for img in batch]
             inputs = processor(images=pil_batch, return_tensors="pt", padding=True).to(device)
