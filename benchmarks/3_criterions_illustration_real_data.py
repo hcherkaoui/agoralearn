@@ -3,16 +3,36 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import argparse
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import numpy as np
 from agoralearn.datasets import fetch_datasets
-from agoralearn.estimation import estimate_ridge, estimate_sigma_squared_ridge
+from agoralearn.estimation import estimate_ridge, estimate_sigma_ridge
 from agoralearn.criterions import criterion_expect, criterion_inst, criterion_heuri
 
 
 ###############################################################################
 # Functions
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--lbda", type=float, default=0.0,
+                        help="Regularization strength for Ridge regression (lambda).")
+    parser.add_argument("--beta", type=float, default=0.1,
+                        help="Uncertainty control parameter beta.")
+    parser.add_argument("--delta", type=float, default=0.95,
+                        help="Confidence level delta (typically small, e.g. 0.05).")
+    parser.add_argument("--n_jobs", type=int, default=1,
+                        help="Number of parallel jobs to run with joblib.")
+    parser.add_argument("--n_runs", type=int, default=1,
+                        help="Number of repetitions for statistical stability.")
+    parser.add_argument("--joblib_verbose", type=int, default=0,
+                        help="Verbosity level for joblib (0 = silent).")
+    parser.add_argument("--dataset_name", type=str, required=True,
+                        help="Name of the dataset to load (e.g., 'ccpp', 'wine').")
+    return parser.parse_args()
+
+
 def main(
     theta_1: np.ndarray,
     X1: np.ndarray,
@@ -57,9 +77,9 @@ def main(
 
     to_return = [
             ("Empirical error difference", 'gray', 'solid', np.array(crit0)),
-            ("In expectation Test", 'tab:orange', 'solid', np.array(crit1)),
-            ("Instantaneous Test", 'tab:red', 'solid', np.array(crit2)),
-            ("Heuristic Test", 'tab:blue', 'solid', np.array(crit3)),
+            # ("In expectation Test", 'tab:orange', 'solid', np.array(crit1)),
+            # ("Instantaneous Test", 'tab:red', 'solid', np.array(crit2)),
+            # ("Heuristic Test", 'tab:blue', 'solid', np.array(crit3)),
                  ]
 
     return to_return
@@ -76,35 +96,30 @@ fontsize = 18
 lw = 4.0
 alpha = 0.5
 
-verbose = 100
-n_jobs = -2
-n_runs = 5
-
-###############################################################################
-# Settings
-lbda = 0.0
-delta = 0.9  # to be adjusted
-beta = 0.1  # to be adjusted
-
-X1, X2, y1, y2 = fetch_datasets(dataset_name='clip')
-
 ###############################################################################
 # Main
 if __name__ == '__main__':
 
-    theta_1 = estimate_ridge(X1, y1, lbda)
-    sigma = estimate_sigma_squared_ridge(np.r_[X1, X2], np.r_[y1, y2], lbda=lbda)
+    args = parse_args()
+
+    X1, X2, y1, y2 = fetch_datasets(dataset_name=args.dataset_name)
+
+    theta_1 = estimate_ridge(X1, y1, args.lbda)
+    sigma = estimate_sigma_ridge(np.r_[X1, X2], np.r_[y1, y2], lbda=args.lbda)
+
+    d = X1.shape[1]
 
     T = min(len(X1), len(X2))
     min_T = int(T / 10)
 
     print('[INFO] Running criterions illustration...')
-    print(f"[INFO] T: {T}, min_T: {min_T}, sigma: {sigma:.2e}, lbda: {lbda:.2e}, "
+    print(f"[INFO] T: {T}, min_T: {min_T}, d: {d}, sigma: {sigma:.2e}, lbda: {args.lbda:.2e}, "
           f"len(X1): {len(X1)}, len(X2): {len(X2)}")
     kwargs = dict(theta_1=theta_1, X1=X1, X2=X2, y1=y1, y2=y2, min_T=min_T,
-                  T=T, sigma=sigma, lbda=lbda, delta=delta, beta=beta)
-    results = Parallel(verbose=verbose, n_jobs=n_jobs)(delayed(main)(**kwargs)
-                                                       for _ in range(n_runs))
+                  T=T, sigma=sigma, lbda=args.lbda, delta=args.delta, beta=args.beta)
+    results = Parallel(verbose=args.joblib_verbose, n_jobs=args.n_jobs)(
+        delayed(main)(**kwargs) for _ in range(args.n_runs)
+        )
 
 ###############################################################################
 # Plotting 1

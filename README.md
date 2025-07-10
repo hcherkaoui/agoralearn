@@ -1,17 +1,17 @@
 <p align="center">
     <a href="https://www.python.org/downloads/release/python-312/">
-        <img alt="Python Version" src="https://img.shields.io/badge/python-3.12-blue.svg" style="margin-right: 10px;">
+        <img alt="Python Version" src="https://img.shields.io/badge/python-3.12-blue.svg" style="margin-right: 50px;">
     </a>
     <a href="https://opensource.org/license/mit">
-        <img alt="License: MIT" src="https://img.shields.io/badge/Licence-MIT-brightgreen" style="margin-right: 10px;">
+        <img alt="License: MIT" src="https://img.shields.io/badge/Licence-MIT-brightgreen" style="margin-right: 50px;">
     </a>
     <a href="https://dl.circleci.com/status-badge/redirect/circleci/GaE9Rv4PkJxh1MG3cLS17a/BBTHWFXBaYvJwcd4myeSTd/tree/main">
-        <img alt="CircleCI Build Status" src="https://dl.circleci.com/status-badge/img/circleci/GaE9Rv4PkJxh1MG3cLS17a/BBTHWFXBaYvJwcd4myeSTd/tree/main.svg?style=svg" style="margin-right: 10px;">
+        <img alt="CircleCI Build Status" src="https://dl.circleci.com/status-badge/img/circleci/GaE9Rv4PkJxh1MG3cLS17a/BBTHWFXBaYvJwcd4myeSTd/tree/main.svg?style=svg" style="margin-right: 50px;">
     </a>
     <a href="https://codecov.io/gh/hcherkaoui/agoralearn">
-        <img alt="Coverage" src="https://codecov.io/gh/hcherkaoui/agoralearn/graph/badge.svg?token=kTAoLIylSv" style="margin-right: 10px;">
+        <img alt="Coverage" src="https://codecov.io/gh/hcherkaoui/agoralearn/graph/badge.svg?token=kTAoLIylSv" style="margin-right: 50px;">
     </a>
-    <img alt="Last Commit" src="https://img.shields.io/github/last-commit/hcherkaoui/agoralearn" style="margin-right: 10px;">
+    <img alt="Last Commit" src="https://img.shields.io/github/last-commit/hcherkaoui/agoralearn" style="margin-right: 50px;">
 </p>
 
 

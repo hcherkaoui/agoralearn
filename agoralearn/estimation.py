@@ -112,12 +112,12 @@ def estimate_james_stein_coef(theta_hat: np.ndarray,
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)
-def estimate_sigma_squared_ridge(X: np.ndarray,
-                                 y: np.ndarray,
-                                 lbda: float = -1.0,
-                                 ) -> float:
+def estimate_sigma_ridge(X: np.ndarray,
+                         y: np.ndarray,
+                         lbda: float = -1.0,
+                         ) -> float:
     """
-    Estimate the noise variance sigma^2 in a linear model y = X theta + eta,
+    Estimate the noise std sigma in a linear model y = X theta + eta,
     using Ridge (or OLS) regression and an unbiased estimator from the residuals.
 
     Parameters
@@ -133,7 +133,7 @@ def estimate_sigma_squared_ridge(X: np.ndarray,
     n, d = X.shape
     theta_hat = estimate_ridge(X, y, lbda)
     residuals = y - X.dot(theta_hat)
-    return np.dot(residuals, residuals) / (n - d)
+    return np.sqrt(np.dot(residuals, residuals) / (n - d))
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)

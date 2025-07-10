@@ -3,6 +3,7 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import argparse
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,6 +12,35 @@ from agoralearn.estimation import estimate_james_stein_coef, estimate_ridge
 
 ###############################################################################
 # Functions
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--lbda", type=float, default=0.0,
+                        help="Regularization strength for Ridge regression (lambda).")
+    parser.add_argument("--beta", type=float, default=0.1,
+                        help="Uncertainty control parameter beta.")
+    parser.add_argument("--delta", type=float, default=0.95,
+                        help="Confidence level delta.")
+    parser.add_argument("--d", type=int, default=10,
+                        help="Dimensionality of the feature space.")
+    parser.add_argument("--sigma", type=float, default=1.0,
+                        help="Standard deviation of the data noise.")
+    parser.add_argument("--T", type=int, default=1000,
+                        help="Total number of time steps (global horizon).")
+    parser.add_argument("--min_T", type=int, default=50,
+                        help="Minimum number of time steps per task.")
+    parser.add_argument("--steps", type=int, default=10,
+                        help="Number of samples steps (e.g. checkpoints).")
+    parser.add_argument("--eps", type=float, default=0.1,
+                        help="Approximation threshold epsilon (e.g., for stopping or precision control).")
+    parser.add_argument("--n_jobs", type=int, default=1,
+                        help="Number of parallel jobs.")
+    parser.add_argument("--n_runs", type=int, default=1,
+                        help="Number of repetitions for averaging.")
+    parser.add_argument("--joblib_verbose", type=int, default=0,
+                        help="Verbosity level for joblib.")
+    return parser.parse_args()
+
+
 def main(
     tt: np.ndarray,
     X1: np.ndarray,
@@ -90,40 +120,26 @@ fontsize = 18
 lw = 3
 alpha = 0.5
 
-verbose = 100
-
-n_jobs = -2
-n_runs = 3
-
-###############################################################################
-# Settings
-d = 5
-
-min_T = d
-T = 1000
-steps = 20
-
-sigma = 1.0
-lbda = 0.0
-
-eps = 1.0
-theta1 = np.array([1.0] + [0.0] * (d - 1))
-theta2 = np.array([1.0, eps] + [0.0] * (d - 2))
-
-tt = np.arange(min_T, T, steps)
-
-X1 = np.array(list(np.eye(d)) + [np.random.randn(d) for _ in range(T - d)])
-X2 = np.array(list(np.eye(d)) + [np.random.randn(d) for _ in range(T - d)])
-
 ###############################################################################
 # Main
 if __name__ == '__main__':
 
+    args = parse_args()
+
+    theta1 = np.array([1.0] + [0.0] * (args.d - 1))
+    theta2 = np.array([1.0, args.eps] + [0.0] * (args.d - 2))
+
+    tt = np.arange(args.min_T, args.T, args.steps)
+
+    X1 = np.array(list(np.eye(args.d)) + [np.random.randn(args.d) for _ in range(args.T - args.d)])
+    X2 = np.array(list(np.eye(args.d)) + [np.random.randn(args.d) for _ in range(args.T - args.d)])
+
     print('[INFO] Running bias term estimation...')
     kwargs = dict(tt=tt, X1=X1, X2=X2, theta1=theta1, theta2=theta2,
-                  sigma=sigma, lbda=lbda)
-    results = Parallel(verbose=verbose, n_jobs=n_jobs)(delayed(main)(**kwargs)
-                                                       for _ in range(n_runs))
+                  sigma=args.sigma, lbda=args.lbda)
+    results = Parallel(verbose=args.joblib_verbose, n_jobs=args.n_jobs)(
+        delayed(main)(**kwargs) for _ in range(args.n_runs)
+        )
 
 ###############################################################################
 # Plotting 1

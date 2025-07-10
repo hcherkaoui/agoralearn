@@ -11,10 +11,10 @@ from torchvision import transforms
 from transformers import CLIPProcessor, CLIPModel
 
 
-data_dir = os.path.dirname(os.path.abspath(__file__))
-clip_vit_weights_filename = "openai/clip-vit-base-patch32"
-cifar_dir = os.path.join(data_dir, "cifar")
-stl10_dir = os.path.join(data_dir, "stl10")
+DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+CLIP_VIT_WEIGHTS_FILENAME = "openai/clip-vit-base-patch32"
+CIFAR_DIR = os.path.join(DATA_DIR, 'data', 'cifar')
+STL10_DIR = os.path.join(DATA_DIR, 'data', 'stl10')
 
 
 def fetch_datasets(dataset_name: str):
@@ -39,6 +39,9 @@ def fetch_datasets(dataset_name: str):
     elif dataset_name == 'clip':
         (X1, y1), (X2, y2) = _load_clip_regression_dataset()
 
+    elif dataset_name == 'ccpp':
+        (X1, y1), (X2, y2) = _load_ccpp_dataset()
+
     else:
         raise ValueError(f"Dataset '{dataset_name}' is not supported.")
 
@@ -61,22 +64,39 @@ def _load_wine_dataset():
         y = df['quality'].values.astype(np.float64)
         return X, y
 
-    X1, y1 = _load_wine(os.path.join(data_dir, 'winequality', 'winequality-red.csv'))
-    X2, y2 = _load_wine(os.path.join(data_dir, 'winequality', 'winequality-white.csv'))
+    X1, y1 = _load_wine(os.path.join(DATA_DIR, 'data', 'winequality', 'winequality-red.csv'))
+    X2, y2 = _load_wine(os.path.join(DATA_DIR, 'data', 'winequality', 'winequality-white.csv'))
 
     return (X1, y1), (X2, y2)
+
+
+def _load_ccpp_dataset():
+    """
+    Load Combined Cycle Power Plant dataset from .xlsx format.
+    Returns two (X, y) datasets from a split.
+    """
+    filepath = os.path.join(DATA_DIR, 'data', 'ccpp', 'Folds5x2_pp.xlsx')
+    df = pd.read_excel(filepath)
+
+    df.columns = [col.strip() for col in df.columns]
+
+    X = df[['AT', 'AP', 'RH', 'V']].to_numpy(dtype=np.float64)
+    y = df['PE'].to_numpy(dtype=np.float64)
+
+    idx = len(X) // 2
+    return (X[:idx], y[:idx]), (X[idx:], y[idx:])
 
 
 def _load_clip_regression_dataset(n_samples=1000, device="cpu"):
     """
     Load CIFAR10 and STL10 datasets (CLIP features, brightness target).
     """
-    model = CLIPModel.from_pretrained(clip_vit_weights_filename).to(device)
-    processor = CLIPProcessor.from_pretrained(clip_vit_weights_filename)
+    model = CLIPModel.from_pretrained(CLIP_VIT_WEIGHTS_FILENAME).to(device)
+    processor = CLIPProcessor.from_pretrained(CLIP_VIT_WEIGHTS_FILENAME)
     transform = transforms.Compose([transforms.Resize(224), transforms.ToTensor()])
 
-    cifar = CIFAR10(root=cifar_dir, train=True, download=True, transform=transform)
-    stl = STL10(root=stl10_dir, split='train', download=True, transform=transform)
+    cifar = CIFAR10(root=CIFAR_DIR, train=True, download=True, transform=transform)
+    stl = STL10(root=STL10_DIR, split='train', download=True, transform=transform)
 
     def _extract_samples(dataset, n):
         imgs, targets = [], []

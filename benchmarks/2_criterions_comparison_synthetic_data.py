@@ -3,6 +3,7 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import argparse
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -20,6 +21,35 @@ def first_pos_index(
     """Return the index of the first negative value in stat_run, or len(stat_run) if none."""
     indices = np.where(stat_run > 0.0)[0]
     return int(indices[0]) if indices.size > 0 else len(stat_run)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--lbda", type=float, default=0.0,
+                        help="Regularization strength for Ridge regression (lambda).")
+    parser.add_argument("--beta", type=float, default=0.1,
+                        help="Uncertainty control parameter beta.")
+    parser.add_argument("--delta", type=float, default=0.95,
+                        help="Confidence level delta.")
+    parser.add_argument("--d", type=int, default=10,
+                        help="Dimensionality of the feature space.")
+    parser.add_argument("--sigma", type=float, default=1.0,
+                        help="Standard deviation of the data noise.")
+    parser.add_argument("--T", type=int, default=1000,
+                        help="Total number of time steps (global horizon).")
+    parser.add_argument("--min_T", type=int, default=50,
+                        help="Minimum number of time steps per task.")
+    parser.add_argument("--steps", type=int, default=10,
+                        help="Number of samples steps (e.g. checkpoints).")
+    parser.add_argument("--eps", type=float, default=0.1,
+                        help="Approximation threshold epsilon (e.g., for stopping or precision control).")
+    parser.add_argument("--n_jobs", type=int, default=1,
+                        help="Number of parallel jobs.")
+    parser.add_argument("--n_runs", type=int, default=1,
+                        help="Number of repetitions for averaging.")
+    parser.add_argument("--joblib_verbose", type=int, default=0,
+                        help="Verbosity level for joblib.")
+    return parser.parse_args()
 
 
 def main(
@@ -89,46 +119,30 @@ fontsize = 18
 lw = 1.5
 alpha = 0.5
 
-verbose = 100
-
-n_jobs = -1
-n_runs = 8 * 4
-
-###############################################################################
-# Settings
-d = 50
-
-min_T = d
-T = 500
-
-sigma = 1.0
-lbda = 0.0
-
-delta = 0.9  # to be adjusted
-beta = 0.1  # to be adjusted
-
-eps = 0.5
-
-theta1 = np.array([1.0] + [0.0] * (d - 1))
-theta2 = np.array([1.0, eps] + [0.0] * (d - 2))
-
-X1 = np.array(list(np.eye(d)) + [np.random.randn(d) for _ in range(T - d)])
-X2 = np.array([np.random.randn(d) for _ in range(T)])
-
 ###############################################################################
 # Main
 if __name__ == '__main__':
 
+    args = parse_args()
+
+    theta1 = np.array([1.0] + [0.0] * (args.d - 1))
+    theta2 = np.array([1.0, args.eps] + [0.0] * (args.d - 2))
+
+    tt = np.arange(args.min_T, args.T)
+
+    X1 = np.array(list(np.eye(args.d)) + [np.random.randn(args.d) for _ in range(args.T - args.d)])
+    X2 = np.array(list(np.eye(args.d)) + [np.random.randn(args.d) for _ in range(args.T - args.d)])
+
     print('[INFO] Running criterions comparison...')
-    kwargs = dict(X1=X1, X2=X2, min_T=min_T, T=T, theta1=theta1, theta2=theta2,
-                  sigma=sigma, lbda=lbda, delta=delta, beta=beta)
-    results = Parallel(verbose=verbose, n_jobs=n_jobs)(delayed(main)(**kwargs)
-                                                       for _ in range(n_runs))
+    kwargs = dict(X1=X1, X2=X2, min_T=args.min_T, T=args.T, theta1=theta1, theta2=theta2,
+                  sigma=args.sigma, lbda=args.lbda, delta=args.delta, beta=args.beta)
+    results = Parallel(verbose=args.joblib_verbose, n_jobs=args.n_jobs)(
+        delayed(main)(**kwargs) for _ in range(args.n_runs)
+        )
 
 ###############################################################################
 # Plotting 1
     figsize = (4, 7)
-    tt = np.arange(min_T, T)
 
     fig, ax = plt.subplots(figsize=figsize)
 
@@ -142,7 +156,7 @@ if __name__ == '__main__':
         ax.fill_between(tt, mean_stats + std_stats, mean_stats - std_stats,
                         color=color[0], alpha=alpha/5)
 
-        idx_first_pos = max(min_T, first_pos_index(mean_stats))
+        idx_first_pos = max(args.min_T, first_pos_index(mean_stats))
         ax.axvline(idx_first_pos, lw=lw/2, color=color[0],  linestyle=linestyle[0],
                    alpha=alpha)
 
