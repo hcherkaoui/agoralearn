@@ -3,6 +3,8 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import time
+import argparse
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -10,9 +12,12 @@ import numpy as np
 import pandas as pd
 from agoralearn.estimation import estimate_ridge
 from agoralearn.criterions import criterion_expect, criterion_inst, criterion_heuri
+from agoralearn.utils import check_random_state, experiment_suffix, format_duration
 
 
-###############################################################################
+t0 = time.time()
+
+################################################################################
 # Functions
 def first_pos_index(
         stat_run: np.ndarray,
@@ -22,6 +27,39 @@ def first_pos_index(
     return int(indices[0]) if indices.size > 0 else len(stat_run)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--lbda", type=float, default=0.0,
+                        help="Regularization strength for Ridge regression (lambda).")
+    parser.add_argument("--beta", type=float, default=0.1,
+                        help="Uncertainty control parameter beta.")
+    parser.add_argument("--delta", type=float, default=0.95,
+                        help="Confidence level delta.")
+    parser.add_argument("--d", type=int, default=10,
+                        help="Dimensionality of the feature space.")
+    parser.add_argument("--sigma_1", type=float, default=1.0,
+                        help="Standard deviation of the data noise for agent 1.")
+    parser.add_argument("--sigma_2", type=float, default=1.0,
+                        help="Standard deviation of the data noise for agent 2.")
+    parser.add_argument("--T", type=int, default=1000,
+                        help="Total number of time steps (global horizon).")
+    parser.add_argument("--min_T", type=int, default=50,
+                        help="Minimum number of time steps per task.")
+    parser.add_argument("--steps", type=int, default=10,
+                        help="Number of samples steps (e.g. checkpoints).")
+    parser.add_argument("--eps", type=float, default=0.1,
+                        help="Approximation threshold epsilon (e.g., for stopping or precision control).")
+    parser.add_argument("--n_jobs", type=int, default=1,
+                        help="Number of parallel jobs.")
+    parser.add_argument("--n_runs", type=int, default=1,
+                        help="Number of repetitions for averaging.")
+    parser.add_argument("--joblib_verbose", type=int, default=0,
+                        help="Verbosity level for joblib.")
+    parser.add_argument("--seed", type=int, default=0,
+                        help="Random state seed.")
+    return parser.parse_args()
+
+
 def main(
     X1: np.ndarray,
     X2: np.ndarray,
@@ -29,14 +67,16 @@ def main(
     T: int,
     theta1: np.ndarray,
     theta2: np.ndarray,
-    sigma: float,
+    sigma_1: float,
+    sigma_2: float,
     lbda: float,
     delta: float,
     beta: float,
+    random_state: None,
 ) -> dict:
     """Main function."""
-    y1 = np.array([x.T @ theta1 + sigma * np.random.randn() for x in X1])
-    y2 = np.array([x.T @ theta2 + sigma * np.random.randn() for x in X2])
+    y1 = np.array([x.T @ theta1 + sigma_1 * np.random.randn() for x in X1])
+    y2 = np.array([x.T @ theta2 + sigma_2 * np.random.randn() for x in X2])
 
     diff_err, crit1, crit2, crit3, crit4, crit5, crit6 = [], [], [], [], [], [], []
     for t in range(min_T, T):
@@ -56,14 +96,14 @@ def main(
 
         diff_err.append(_err_collab - _err_single)
 
-        crit1.append(criterion_expect(theta1, theta2, X1_t, X2_t, sigma))
-        crit2.append(criterion_expect(theta_1_hat, theta_2_hat, X1_t, X2_t, sigma, use_estimate=True))
+        crit1.append(criterion_expect(theta1, theta2, X1_t, X2_t, sigma_1, sigma_2))
+        crit2.append(criterion_expect(theta_1_hat, theta_2_hat, X1_t, X2_t, sigma_1, sigma_2, use_estimate=True))
 
-        crit3.append(criterion_inst(theta1, theta2, X1_t, X2_t, sigma, delta))
-        crit4.append(criterion_inst(theta_1_hat, theta_2_hat, X1_t, X2_t, sigma, delta, use_estimate=True))
+        crit3.append(criterion_inst(theta1, theta2, X1_t, X2_t, sigma_1, sigma_2, delta))
+        crit4.append(criterion_inst(theta_1_hat, theta_2_hat, X1_t, X2_t, sigma_1, sigma_2, delta, use_estimate=True))
 
-        crit5.append(criterion_heuri(theta1, theta2, X1_t, X2_t, sigma, beta))
-        crit6.append(criterion_heuri(theta_1_hat, theta_2_hat, X1_t, X2_t, sigma, beta, use_estimate=True))
+        crit5.append(criterion_heuri(theta1, theta2, X1_t, X2_t, sigma_1, sigma_2, beta))
+        crit6.append(criterion_heuri(theta_1_hat, theta_2_hat, X1_t, X2_t, sigma_1, sigma_2, beta, use_estimate=True))
 
     to_return = [
             ("Empirical error difference", 'tab:blue', 'solid', np.array(diff_err)),
@@ -78,10 +118,8 @@ def main(
     return to_return
 
 
-###############################################################################
+################################################################################
 # Globals
-np.random.seed(0)
-
 figures_dir = 'figures'
 os.makedirs(figures_dir, exist_ok=True)
 
@@ -89,46 +127,36 @@ fontsize = 18
 lw = 1.5
 alpha = 0.5
 
-verbose = 100
-
-n_jobs = -1
-n_runs = 8 * 4
-
-###############################################################################
-# Settings
-d = 50
-
-min_T = d
-T = 500
-
-sigma = 1.0
-lbda = 0.0
-
-delta = 0.9  # to be adjusted
-beta = 0.1  # to be adjusted
-
-eps = 0.5
-
-theta1 = np.array([1.0] + [0.0] * (d - 1))
-theta2 = np.array([1.0, eps] + [0.0] * (d - 2))
-
-X1 = np.array(list(np.eye(d)) + [np.random.randn(d) for _ in range(T - d)])
-X2 = np.array([np.random.randn(d) for _ in range(T)])
-
-###############################################################################
+################################################################################
 # Main
 if __name__ == '__main__':
 
-    print('[INFO] Running criterions comparison...')
-    kwargs = dict(X1=X1, X2=X2, min_T=min_T, T=T, theta1=theta1, theta2=theta2,
-                  sigma=sigma, lbda=lbda, delta=delta, beta=beta)
-    results = Parallel(verbose=verbose, n_jobs=n_jobs)(delayed(main)(**kwargs)
-                                                       for _ in range(n_runs))
+    args = parse_args()
 
-###############################################################################
+    filename_suffix = experiment_suffix(args)
+
+    random_state = check_random_state(args.seed)
+
+    theta1 = np.array([1.0] + [0.0] * (args.d - 1))
+    theta2 = np.array([1.0, args.eps] + [0.0] * (args.d - 2))
+
+    tt = np.arange(args.min_T, args.T)
+
+    X1 = np.array(list(np.eye(args.d)) + [np.random.randn(args.d) for _ in range(args.T - args.d)])
+    X2 = np.array(list(np.eye(args.d)) + [np.random.randn(args.d) for _ in range(args.T - args.d)])
+
+    print('[INFO] Running criterions comparison...')
+
+    kwargs = dict(X1=X1, X2=X2, min_T=args.min_T, T=args.T, theta1=theta1, theta2=theta2,
+                  sigma_1=args.sigma_1, sigma_2=args.sigma_2, lbda=args.lbda, delta=args.delta,
+                  beta=args.beta, random_state=random_state)
+    results = Parallel(verbose=args.joblib_verbose, n_jobs=args.n_jobs)(
+        delayed(main)(**kwargs) for _ in range(args.n_runs)
+        )
+
+################################################################################
 # Plotting 1
     figsize = (4, 7)
-    tt = np.arange(min_T, T)
 
     fig, ax = plt.subplots(figsize=figsize)
 
@@ -142,7 +170,7 @@ if __name__ == '__main__':
         ax.fill_between(tt, mean_stats + std_stats, mean_stats - std_stats,
                         color=color[0], alpha=alpha/5)
 
-        idx_first_pos = max(min_T, first_pos_index(mean_stats))
+        idx_first_pos = max(args.min_T, first_pos_index(mean_stats))
         ax.axvline(idx_first_pos, lw=lw/2, color=color[0],  linestyle=linestyle[0],
                    alpha=alpha)
 
@@ -150,7 +178,6 @@ if __name__ == '__main__':
 
     ax.set_xlabel('Iterations', fontsize=fontsize)
     ax.set_xscale('log')
-    ax.set_yscale('symlog', linthresh=1)
     ax.tick_params(axis='y', which='both', labelsize=int(0.7*fontsize))
     ax.grid(True, which='both', axis='y')
 
@@ -164,12 +191,12 @@ if __name__ == '__main__':
 
     fig.show()
 
-    filename = os.path.join(figures_dir, "criterions_comparison.pdf")
+    filename = os.path.join(figures_dir, "criterions_comparison") + filename_suffix + '.pdf'
 
     print("[INFO] Saving figure to", filename)
     fig.savefig(filename, dpi=300)
 
-###############################################################################
+################################################################################
 # Plotting 2
     figsize = (4, 6)
 
@@ -211,11 +238,11 @@ if __name__ == '__main__':
 
     fig.tight_layout()
 
-    fig.show()
-
-    filename = os.path.join(figures_dir, "stopping_times_comparison.pdf")
+    filename = os.path.join(figures_dir, "stopping_times_comparison") + filename_suffix + '.pdf'
 
     print("[INFO] Saving figure to", filename)
     fig.savefig(filename, dpi=300)
 
-# %%
+################################################################################
+# Timing
+print(f"[INFO] Experiment duration: {format_duration(time.time() - t0)}")

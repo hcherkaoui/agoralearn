@@ -112,12 +112,12 @@ def estimate_james_stein_coef(theta_hat: np.ndarray,
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)
-def estimate_sigma_squared_ridge(X: np.ndarray,
-                                 y: np.ndarray,
-                                 lbda: float = -1.0,
-                                 ) -> float:
+def estimate_sigma_ridge(X: np.ndarray,
+                         y: np.ndarray,
+                         lbda: float = -1.0,
+                         ) -> float:
     """
-    Estimate the noise variance sigma^2 in a linear model y = X theta + eta,
+    Estimate the noise std sigma in a linear model y = X theta + eta,
     using Ridge (or OLS) regression and an unbiased estimator from the residuals.
 
     Parameters
@@ -133,7 +133,7 @@ def estimate_sigma_squared_ridge(X: np.ndarray,
     n, d = X.shape
     theta_hat = estimate_ridge(X, y, lbda)
     residuals = y - X.dot(theta_hat)
-    return np.dot(residuals, residuals) / (n - d)
+    return np.sqrt(np.dot(residuals, residuals) / (n - d))
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)
@@ -142,7 +142,9 @@ def estimate_bias_square_norm(theta1_hat: np.ndarray,
                               M: np.ndarray,
                               A1_inv: np.ndarray,
                               A2_inv: np.ndarray,
-                              sigma: float,
+                              sigma_1: float,
+                              sigma_2: float,
+                              safe: bool = True,
                               ) -> float:
     """
     Estimate || M (theta2^* - theta1^*) ||_2^2 using an unbiased estimator.
@@ -155,8 +157,12 @@ def estimate_bias_square_norm(theta1_hat: np.ndarray,
         Matrix M_t of shape (m, d)
     A1_inv, A2_inv : np.ndarray
         Inverse Gram matrices of shape (d, d)
-    sigma : float
-        Noise standard deviations
+    sigma_1 : float
+        Noise standard deviations of agent 1
+    sigma_2 : float
+        Noise standard deviations of agent 1
+    safe : bool
+        Option to only return positive value
 
     Returns
     -------
@@ -164,9 +170,12 @@ def estimate_bias_square_norm(theta1_hat: np.ndarray,
         Unbiased estimate of the squared bias term.
     """
     bias_norm_sq = bias_square_norm(M, theta2_hat, theta1_hat)
-    correction = sigma**2 * np.trace(M.dot(A2_inv + A1_inv).dot(M.T))
+    correction = sigma_1**2 * np.trace(M.dot(A2_inv).dot(M.T)) + sigma_2**2 * np.trace(M.dot(A1_inv).dot(M.T))
 
-    return bias_norm_sq - correction
+    if safe:
+        return max(bias_norm_sq - correction, 0.0)
+    else:
+        return bias_norm_sq - correction
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)
@@ -176,7 +185,9 @@ def estimate_bias_square_B_norm(theta1_hat: np.ndarray,
                                 B: np.ndarray,
                                 A1_inv: np.ndarray,
                                 A2_inv: np.ndarray,
-                                sigma: float,
+                                sigma_1: float,
+                                sigma_2: float,
+                                safe: bool = True,
                                 ) -> float:
     """
     Estimate || M (theta2^* - theta1^*) ||_B^2 using an unbiased estimator.
@@ -189,8 +200,12 @@ def estimate_bias_square_B_norm(theta1_hat: np.ndarray,
         Matrix M_t of shape (m, d)
     A1_inv, A2_inv : np.ndarray
         Inverse Gram matrices of shape (d, d)
-    sigma : float
+    sigma_1 : float
         Noise standard deviations
+    sigma_2 : float
+        Noise standard deviations
+    safe : bool
+        Option to only return positive value
 
     Returns
     -------
@@ -198,6 +213,9 @@ def estimate_bias_square_B_norm(theta1_hat: np.ndarray,
         Unbiased estimate of the squared bias term.
     """
     bias_B_norm_sq = bias_square_B_norm(M, B, theta2_hat, theta1_hat)
-    correction = sigma**2 * np.trace(B.dot(M.dot(A1_inv + A2_inv).dot(M.T)))
+    correction = sigma_1**2 * np.trace(B.dot(M).dot(A1_inv).dot(M.T)) + sigma_2**2 * np.trace(B.dot(M).dot(A2_inv).dot(M.T))
 
-    return bias_B_norm_sq - correction
+    if safe:
+        return max(bias_B_norm_sq - correction, 0.0)
+    else:
+        return bias_B_norm_sq - correction

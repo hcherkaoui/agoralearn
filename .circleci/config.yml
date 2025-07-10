@@ -23,6 +23,10 @@ jobs:
           command: pip install pytest pytest-cov
 
       - run:
+        name: Run examples
+        command: python examples/0_time_series_pred_single.py
+
+      - run:
           name: Run tests and collect coverage
           command: pytest --cov --cov-branch --cov-report=xml
 

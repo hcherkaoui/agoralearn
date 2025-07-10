@@ -92,6 +92,14 @@ REQUIRED_MODULE_METADATA = (
             "install_info": INSTALL_MSG,
         },
     ),
+    (
+        "openpyxl",
+        {
+            "min_version": "3.1.5",
+            "required_at_installation": True,
+            "install_info": INSTALL_MSG,
+        },
+    ),
 )
 
 

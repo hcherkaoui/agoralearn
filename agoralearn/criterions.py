@@ -14,7 +14,8 @@ def criterion_expect(
     theta2: np.ndarray,
     X1: np.ndarray,
     X2: np.ndarray,
-    sigma: float = 1.0,
+    sigma_1: float = 1.0,
+    sigma_2: float = 1.0,
     use_estimate: bool = False,
 ) -> float:
     """A collaboration test to determine whether combining estimators yields a statistically safer prediction than using a single agent alone.
@@ -29,8 +30,10 @@ def criterion_expect(
         Design matrix for agent 1, shape (n1, d)
     X2 : np.ndarray
         Design matrix for agent 2, shape (n2, d)
-    sigma : float
-        Known variance of the Gaussian noise (same for both agents)
+    sigma_1 : float, optional
+        Known variance of the Gaussian noise for agent 1
+    sigma_2 : float, optional
+        Known variance of the Gaussian noise for agent 2
     use_estimate : bool:
         Boolean to flag if estimate of thetas are used.
 
@@ -47,14 +50,15 @@ def criterion_expect(
     A1_inv = np.linalg.inv(A1)
     A2_inv = np.linalg.inv(A2)
     Ac_inv = np.linalg.inv(Ac)
-    M = Ac_inv.dot(A2)
+    M = Ac_inv @ A2
 
     if use_estimate:
-        bias_norm_sq = estimate_bias_square_norm(theta1, theta2, M, A1_inv, A2_inv, sigma)
+        bias_norm_sq = estimate_bias_square_norm(theta1, theta2, M, A1_inv, A2_inv, sigma_1, sigma_2, safe=True)
     else:
         bias_norm_sq = bias_square_norm(M, theta2, theta1)
 
-    variance_term = sigma**2 * np.trace(Ac_inv - A1_inv)
+    mid_matrix = sigma_1**2 * A1 + sigma_2**2 * A2
+    variance_term = np.trace(Ac_inv @ mid_matrix @ Ac_inv - sigma_1**2 * A1_inv)
 
     return float(bias_norm_sq + variance_term)
 
@@ -65,7 +69,8 @@ def criterion_inst(
     theta2: np.ndarray,
     X1: np.ndarray,
     X2: np.ndarray,
-    sigma: float = 1.0,
+    sigma_1: float = 1.0,
+    sigma_2: float = 1.0,
     delta: float = 0.05,
     use_estimate: bool = False,
 ) -> float:
@@ -81,8 +86,10 @@ def criterion_inst(
         Design matrix for agent 1, shape (n1, d)
     X2 : np.ndarray
         Design matrix for agent 2, shape (n2, d)
-    sigma : float
-        Known variance of the Gaussian noise (same for both agents)
+    sigma_1 : float, optional
+        Known variance of the Gaussian noise for agent 1
+    sigma_2 : float, optional
+        Known variance of the Gaussian noise for agent 2
     delta : float, optional
         Probabilistic confidence level parameter of the collaboration test.
     use_estimate : bool, optional
@@ -106,8 +113,8 @@ def criterion_inst(
     B = _B(A1_inv, A2_inv, M)
 
     if use_estimate:
-        bias_norm_sq = estimate_bias_square_norm(theta1, theta2, M, A1_inv, A2_inv, sigma)
-        bias_B_norm_sq = estimate_bias_square_B_norm(theta1, theta2, M, B, A1_inv, A2_inv, sigma)
+        bias_norm_sq = estimate_bias_square_norm(theta1, theta2, M, A1_inv, A2_inv, sigma_1, sigma_2, safe=True)
+        bias_B_norm_sq = estimate_bias_square_B_norm(theta1, theta2, M, B, A1_inv, A2_inv, sigma_1, sigma_2, safe=True)
     else:
         bias_norm_sq = bias_square_norm(M, theta2, theta1)
         bias_B_norm_sq = bias_square_B_norm(M, B, theta2, theta1)
@@ -120,12 +127,12 @@ def criterion_inst(
     eig_A1_min = np.min(np.linalg.eigvalsh(A1))
     eig_B_max = np.max(np.linalg.eigvalsh(B))
 
-    lower_bound_single = sigma**2 * (tr_A1_inv
+    lower_bound_single = sigma_1**2 * (tr_A1_inv
                                      - 2 * np.sqrt(np.log(1 / delta) * tr_A1_inv2)
                                      - 2 * np.log(1 / delta) / eig_A1_min)
 
-    cross_term = 2 * sigma * np.sqrt(np.log(1 / delta) * bias_B_norm_sq)
-    variance_term = sigma**2 * (tr_B
+    cross_term = 2 * sigma_2 * np.sqrt(np.log(1 / delta) * bias_B_norm_sq)
+    variance_term = sigma_2**2 * (tr_B
                                 + 2 * np.sqrt(np.log(1 / delta) * tr_B2)
                                 + 2 * np.log(1 / delta) * eig_B_max)
     upper_bound_collab = bias_norm_sq + cross_term + variance_term
@@ -139,7 +146,8 @@ def criterion_heuri(
     theta2: np.ndarray,
     X1: np.ndarray,
     X2: np.ndarray,
-    sigma: float = 1.0,
+    sigma_1: float = 1.0,
+    sigma_2: float = 1.0,
     beta: float = 1.0,
     use_estimate: bool = False,
 ) -> float:
@@ -156,8 +164,10 @@ def criterion_heuri(
         Design matrix for agent 1, shape (n1, d)
     X2 : np.ndarray
         Design matrix for agent 2, shape (n2, d)
-    sigma : float, optional
-        Known variance of the Gaussian noise (same for both agents)
+    sigma_1 : float, optional
+        Known variance of the Gaussian noise for agent 1
+    sigma_2 : float, optional
+        Known variance of the Gaussian noise for agent 2
     beta : float, optional
         Heuristic confidence level parameter of the collaboration test
     use_estimate : bool, optional
@@ -180,17 +190,17 @@ def criterion_heuri(
     M = Ac_inv @ A2
 
     if use_estimate:
-        bias_norm_sq = estimate_bias_square_norm(theta1, theta2, M, A1_inv, A2_inv, sigma)
+        bias_norm_sq = estimate_bias_square_norm(theta1, theta2, M, A1_inv, A2_inv, sigma_1, sigma_2, safe=True)
     else:
         bias_norm_sq = bias_square_norm(M, theta2, theta1)
 
     B = _B(A1_inv, A2_inv, M)
 
-    e_single = sigma**2 * np.trace(A1_inv)
-    std_single = np.sqrt(2 * sigma**4 * np.trace(A1_inv @ A1_inv))
+    e_single = sigma_1**2 * np.trace(A1_inv)
+    std_single = np.sqrt(2 * sigma_1**4 * np.trace(A1_inv @ A1_inv))
 
-    e_collab = bias_norm_sq + sigma**2 * np.trace(Ac_inv)
-    std_collab = np.sqrt(2 * sigma**4 * np.trace(B @ B))
+    e_collab = bias_norm_sq + sigma_2**2 * np.trace(Ac_inv)
+    std_collab = np.sqrt(2 * sigma_2**4 * np.trace(B @ B))
 
     return float(e_collab + beta * std_collab - (e_single - beta * std_single))
 
