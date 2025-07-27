@@ -77,9 +77,9 @@ def main(
 
     to_return = [
             ("Empirical error difference", 'gray', 'solid', np.array(crit0)),
-            # ("In expectation Test", 'tab:orange', 'solid', np.array(crit1)),
-            # ("Instantaneous Test", 'tab:red', 'solid', np.array(crit2)),
-            # ("Heuristic Test", 'tab:blue', 'solid', np.array(crit3)),
+            ("In expectation Test", 'tab:orange', 'solid', np.array(crit1)),
+            ("Instantaneous Test", 'tab:red', 'solid', np.array(crit2)),
+            ("Heuristic Test", 'tab:blue', 'solid', np.array(crit3)),
                  ]
 
     return to_return
@@ -132,6 +132,7 @@ if __name__ == '__main__':
         name, color, linestyle, test_value = zip(*result)  # iteration on trials
 
         mean_test_value = np.mean(np.atleast_2d(test_value), axis=0)
+        std_test_value = np.std(np.atleast_2d(test_value), axis=0)
 
         if np.isnan(mean_test_value).any():
             print(f"[WARNING] {name[0]} contains NaN values, skipping plot.")
@@ -139,12 +140,13 @@ if __name__ == '__main__':
 
         ax.plot(tt, mean_test_value, lw=lw, color=color[0], linestyle=linestyle[0],
                 label=name[0], alpha=alpha)
+        ax.fill_between(tt, mean_test_value - std_test_value, mean_test_value + std_test_value,
+                        color=color[0], alpha=0.2)
 
     ax.axhline(0.0, lw=lw/2, linestyle='dashed', color='black', alpha=alpha)
 
     ax.set_xlabel('Iterations', fontsize=fontsize)
     ax.set_xscale('log')
-    ax.set_yscale('symlog', linthresh=1)
     ax.tick_params(axis='y', which='both', labelsize=int(0.7*fontsize))
     ax.grid(True, which='both', axis='y')
 

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 from agoralearn.estimation import (estimate_operator_norm, estimate_ridge, estimate_james_stein_coef,
-                                   estimate_sigma_squared_ridge, estimate_bias_square_norm, estimate_bias_square_B_norm)
+                                   estimate_sigma_ridge, estimate_bias_square_norm, estimate_bias_square_B_norm)
 from agoralearn.stats import bias_square_norm, bias_square_B_norm
 
 
@@ -49,9 +49,9 @@ def test_estimate_james_stein_coef_positive(data):
     assert coef <= 1.0
 
 
-def test_estimate_sigma_squared_ridge(data):
+def test_estimate_sigma_ridge(data):
     X, y, *_ = data
-    sigma_hat = estimate_sigma_squared_ridge(X, y)
+    sigma_hat = estimate_sigma_ridge(X, y)
     assert sigma_hat >= 0.0
 
 

@@ -3,8 +3,10 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import subprocess
 import numpy as np
 import pandas as pd
+from sklearn.datasets import fetch_california_housing
 import torch
 from torchvision.datasets import CIFAR10, STL10
 from torchvision import transforms
@@ -39,8 +41,14 @@ def fetch_datasets(dataset_name: str):
     elif dataset_name == 'clip':
         (X1, y1), (X2, y2) = _load_clip_regression_dataset()
 
-    elif dataset_name == 'ccpp':
-        (X1, y1), (X2, y2) = _load_ccpp_dataset()
+    elif dataset_name == 'power':
+        (X1, y1), (X2, y2) = _load_power_plant_dataset()
+
+    elif dataset_name == 'boston':
+        (X1, y1), (X2, y2) = _load_boston_dataset()
+
+    elif dataset_name == 'medical':
+        (X1, y1), (X2, y2) = _load_synthea_dataset()
 
     else:
         raise ValueError(f"Dataset '{dataset_name}' is not supported.")
@@ -70,7 +78,7 @@ def _load_wine_dataset():
     return (X1, y1), (X2, y2)
 
 
-def _load_ccpp_dataset():
+def _load_power_plant_dataset():
     """
     Load Combined Cycle Power Plant dataset from .xlsx format.
     Returns two (X, y) datasets from a split.
@@ -85,6 +93,50 @@ def _load_ccpp_dataset():
 
     idx = len(X) // 2
     return (X[:idx], y[:idx]), (X[idx:], y[idx:])
+
+
+def _load_boston_dataset():
+    """
+    Load Boston Housing dataset from scikit-learn.
+    Returns two splits of (X, y) for collaborative forecasting.
+    """
+    data = fetch_california_housing()
+    X_full = data.data.astype(np.float64)
+    y_full = data.target.astype(np.float64)
+
+    n = len(y_full)
+    split = n // 2
+    return (X_full[:split], y_full[:split]), (X_full[split:], y_full[split:])
+
+
+def _load_synthea_dataset():
+    """
+    Load Synthea patient dataset from local CSV file.
+
+    Returns two splits of (X, y) for collaborative modeling.
+    X includes: age, is_male.
+    y is binary: whether patient died during simulation.
+    """
+    filepath = os.path.join(DATA_DIR, "data", "synthea", "synthea_patients.csv")
+
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"Synthea file not found at: {filepath}")
+
+    patients = pd.read_csv(filepath)
+
+    patients.columns = [col.lower() for col in patients.columns]
+    patients['birthdate'] = pd.to_datetime(patients['birthdate'])
+    patients['deathdate'] = pd.to_datetime(patients['deathdate'], errors='coerce')
+    patients['age'] = 2020 - patients['birthdate'].dt.year
+    patients['is_male'] = (patients['gender'] == 'male').astype(float)
+    patients['died'] = (~patients['deathdate'].isna()).astype(float)
+
+    X = patients[['age', 'is_male']].to_numpy(dtype=np.float64)
+    y = patients['died'].to_numpy(dtype=np.float64)
+
+    n = len(y)
+    split = n // 2
+    return (X[:split], y[:split]), (X[split:], y[split:])
 
 
 def _load_clip_regression_dataset(n_samples=1000, device="cpu"):
