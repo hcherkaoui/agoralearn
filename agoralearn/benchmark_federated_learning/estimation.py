@@ -4,7 +4,7 @@
 
 import numpy as np
 import numba
-from .stats import bias_square_norm, bias_square_B_norm, Id_like
+from stats import bias_square_norm, bias_square_B_norm, Id_like
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)

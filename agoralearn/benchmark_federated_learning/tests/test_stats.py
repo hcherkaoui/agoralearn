@@ -4,7 +4,7 @@
 
 import pytest
 import numpy as np
-from agoralearn.stats import XXt, XtX, Id_like, bias_square_norm, bias_square_B_norm, _B, _psi
+from stats import XXt, XtX, Id_like, bias_square_norm, bias_square_B_norm, _B, _psi
 
 
 @pytest.fixture

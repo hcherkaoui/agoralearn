@@ -3,14 +3,19 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import time
 import argparse
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
-from agoralearn.estimation import estimate_ridge
-from agoralearn.criterions import criterion_expect, criterion_inst, criterion_heuri
+from agoralearn.utils import crop_pdf, format_duration
+from estimation import estimate_ridge
+from criterions import criterion_expect, criterion_inst, criterion_heuri
+
+
+t0 = time.time()
 
 
 ###############################################################################
@@ -178,7 +183,7 @@ if __name__ == '__main__':
 
     fig.show()
 
-    filename = os.path.join(figures_dir, "criterions_comparison.pdf")
+    filename = os.path.join(figures_dir, "2_criterions_comparison.pdf")
 
     print("[INFO] Saving figure to", filename)
     fig.savefig(filename, dpi=300)
@@ -225,11 +230,13 @@ if __name__ == '__main__':
 
     fig.tight_layout()
 
-    fig.show()
-
-    filename = os.path.join(figures_dir, "stopping_times_comparison.pdf")
-
+    filename = os.path.join(figures_dir, "2_stopping_times_comparison.pdf")
     print("[INFO] Saving figure to", filename)
     fig.savefig(filename, dpi=300)
+    crop_pdf(filename)
+    fig.show()
 
-# %%
+###############################################################################
+# Timing
+    print(f"[INFO] Experiment duration: {format_duration(time.time() - t0)}")
+

@@ -5,9 +5,9 @@
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
-from agoralearn.estimation import (estimate_operator_norm, estimate_ridge, estimate_james_stein_coef,
-                                   estimate_sigma_ridge, estimate_bias_square_norm, estimate_bias_square_B_norm)
-from agoralearn.stats import bias_square_norm, bias_square_B_norm
+from estimation import (estimate_operator_norm, estimate_ridge, estimate_james_stein_coef,
+                        estimate_sigma_ridge, estimate_bias_square_norm, estimate_bias_square_B_norm)
+from stats import bias_square_norm, bias_square_B_norm
 
 
 @pytest.fixture

@@ -3,11 +3,16 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import time
 import argparse
 import numpy as np
 from joblib import Parallel, delayed
 import torch
 import matplotlib.pyplot as plt
+from agoralearn.utils import crop_pdf, format_duration
+
+
+t0 = time.time()
 
 
 ###############################################################################
@@ -191,7 +196,14 @@ if __name__ == "__main__":
 
     plt.tight_layout()
 
-    filename = os.path.join(FIG_DIR, "delta_gd_comparison.pdf")
+    filename = os.path.join(FIG_DIR, "4_delta_gd_comparison.pdf")
     print(f"[INFO] Plot saved as '{filename}'.")
     plt.savefig(filename, dpi=300)
+    crop_pdf(filename)
+
+    plt.show()
+
+###############################################################################
+# Timing
+    print(f"[INFO] Experiment duration: {format_duration(time.time() - t0)}")
 

@@ -1,6 +1,7 @@
 ignore:
   - "agoralearn/info.py"
-  - "agoralearn/tests/"
+  - "agoralearn/benchmark_federated_learning/tests/"
+  - "agoralearn/benchmark_gradient_augmentation/tests/"
 
 flag_management:
   individual_flags:

@@ -17,13 +17,13 @@
 
 # AgoraLearn
 
-Collaborative time series forecasting.
+A collection of benchmarks for collaborative learning.
 
 ---
 
-### Description:
+## Description:
 
-**AgoraLearn** is a research-oriented Python library for **collaborative time series forecasting**, where multiple time series collaborate and improve prediction.
+**AgoraLearn** is a research-oriented Python benchmark suite focused on **collaborative learning**, in which models enhance their predictive performance by leveraging training data from other related datasets to improve generalization.
 
 ---
 
@@ -42,12 +42,6 @@ git clone https://github.com/hcherkaoui/agoralearn
 cd agoralearn
 pip install -r requirements.txt
 pip install -e .
-```
-
-To validate the installation, run:
-```bash
-cd examples/
-python 0_time_series_pred_single.py
 ```
 
 ---
@@ -81,13 +75,3 @@ In order to check the PEP 8 compliance level of the package, run the command::
 flake8 --ignore=E501,W503 --count agoralearn
 ```
 
-## 🧾 Citing AgoraLearn
-
-If you use **AgoraLearn** in your research or project, please cite it as follows:
-```bibtex
-@misc{cherkaoui2025agoralearn,
-  author       = {Hamza Cherkaoui, Hélène Halconruy, Yohan Petetin},
-  title        = {Optimal Collaborative Linear Regression},
-  year         = {2025},
-}
-```

@@ -11,21 +11,33 @@
 .coverage
 coverage.xml
 
-# ignore specific usual dirs
-figures/
-cifar/
-stl10/
-.ipynb_checkpoints/
-dist/
-docs/
-.DS_Store/
+
+# ignore cache dirs
 .cache/
 __cache__/
-build/
+_cache/
 .pytest_cache/
 __pycache__/
 .cachedir/
+.ipynb_checkpoints/
+
+# ignore data dirs
+cifar/
+data/
+_data/
+stl10/
+
+# ignore compiled dirs
+build/
 _build/
+
+# ignore figure dirs
+figures/
+
+# ignore specific dirs
+dist/
+docs/
+.DS_Store/
 auto_examples/
 _autosummary/
 generated/

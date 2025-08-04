@@ -3,13 +3,18 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import time
 import argparse
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import numpy as np
-from agoralearn.datasets import fetch_datasets
-from agoralearn.estimation import estimate_ridge, estimate_sigma_ridge
-from agoralearn.criterions import criterion_expect, criterion_inst, criterion_heuri
+from agoralearn.utils import crop_pdf, format_duration
+from datasets import fetch_datasets
+from estimation import estimate_ridge, estimate_sigma_ridge
+from criterions import criterion_expect, criterion_inst, criterion_heuri
+
+
+t0 = time.time()
 
 
 ###############################################################################
@@ -158,9 +163,13 @@ if __name__ == '__main__':
 
     fig.tight_layout()
 
-    fig.show()
-
-    filename = os.path.join(figures_dir, "criterions_illustration.pdf")
-
+    filename = os.path.join(figures_dir, f"3_criterions_{args.dataset_name}_illustration.pdf")
     print("[INFO] Saving figure to", filename)
     fig.savefig(filename, dpi=300)
+    crop_pdf(filename)
+    fig.show()
+
+###############################################################################
+# Timing
+    print(f"[INFO] Experiment duration: {format_duration(time.time() - t0)}")
+

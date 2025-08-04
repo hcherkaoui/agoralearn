@@ -1,3 +1,3 @@
-"""Agora Learn: Collaborative time series forcasting Python package."""
+"""Agora Learn: Ensemble of benchmarks of collaborative learning."""
 
 # Authors: Hamza Cherkaoui

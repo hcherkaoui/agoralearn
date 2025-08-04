@@ -4,8 +4,8 @@
 
 import numpy as np
 import numba
-from .stats import XtX, bias_square_norm, bias_square_B_norm, _B, _psi
-from .estimation import estimate_bias_square_norm, estimate_bias_square_B_norm
+from stats import XtX, bias_square_norm, bias_square_B_norm, _B, _psi
+from estimation import estimate_bias_square_norm, estimate_bias_square_B_norm
 
 
 @numba.jit(nopython=True, cache=True, fastmath=True)

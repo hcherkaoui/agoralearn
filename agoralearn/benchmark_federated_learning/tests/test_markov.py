@@ -4,7 +4,7 @@
 
 import pytest
 import numpy as np
-from agoralearn.markov import generate_transition_matrix, generate_markov_chain, simulate_hmm
+from markov import generate_transition_matrix, generate_markov_chain, simulate_hmm
 
 
 @pytest.mark.parametrize("matrix_type", ["uniform", "sticky", "cyclic", "biased", "block"])

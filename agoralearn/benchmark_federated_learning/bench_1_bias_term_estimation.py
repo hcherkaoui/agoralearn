@@ -3,11 +3,16 @@
 # Authors: Hamza Cherkaoui
 
 import os
+import time
 import argparse
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import numpy as np
-from agoralearn.estimation import estimate_james_stein_coef, estimate_ridge
+from agoralearn.utils import crop_pdf, format_duration
+from estimation import estimate_james_stein_coef, estimate_ridge
+
+
+t0 = time.time()
 
 
 ###############################################################################
@@ -168,9 +173,12 @@ if __name__ == '__main__':
 
     fig.tight_layout()
 
-    fig.show()
-
-    filename = os.path.join(figures_dir, "err_bias_term.pdf")
-
+    filename = os.path.join(figures_dir, "1_err_bias_term.pdf")
     print("[INFO] Saving figure to", filename)
     fig.savefig(filename, dpi=300)
+    crop_pdf(filename)
+
+###############################################################################
+# Timing
+    print(f"[INFO] Experiment duration: {format_duration(time.time() - t0)}")
+
